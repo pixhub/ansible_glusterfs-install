@@ -1,0 +1,57 @@
+---
+# Include variables and define needed variables.
+- name: Include OS-specific variables.
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "1-version-{{ ansible_distribution|lower }}_{{ ansible_distribution_major_version|lower }}.yml"
+    - "2-distribution-{{ ansible_distribution|lower }}-{{ ansible_architecture }}.yml"
+    - "3-distribution-{{ ansible_distribution|lower }}.yml"
+    - "4-family-{{ ansible_os_family|lower }}.yml"
+    - "5-default.yml"
+
+- name: Install dependencies for Debian_OS_family
+  apt:
+    update_cache: yes
+    name: "{{ post_install }}"
+    state: latest
+  when: ansible_os_family|lower == "debian"
+
+- name: Install dependencies for Redhat_OS_family
+  yum:
+    update_cache: yes
+    name: "{{ post_install }}"
+    state: latest
+  when: ansible_os_family|lower == "redhat"
+
+- name: Add apt-repo for Ubuntu_Distributions
+  apt_repository:
+    repo: "ppa:gluster/glusterfs-3.8"
+    state: present
+  when: ansible_distribution|lower == "ubuntu"
+
+- name: Add GPG key for Debian_Distributions
+  shell: "wget -O - https://download.gluster.org/pub/gluster/glusterfs/3.12/rsa.pub | apt-key add -"
+  when: ansible_distribution|lower == "debian"
+
+- name: Install GlusterFS for Debian_OS_Family
+  apt:
+    update_cache: yes
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - glusterfs-server
+    - glusterfs-client
+  when: ansible_os_family|lower == "debian"
+
+- name: Install GlusterFS for RedHat_OS-Family
+  yum:
+    update_cache: yes
+    name: "{{ packages_install }}"
+    state: latest
+  when: ansible_os_family|lower == "redhat"
+
+- name: Ensure GlusterFS is started and enabled at boot.
+  service: 
+    name: "{{ glusterfs_daemon }}"
+    state: started
+    enabled: yes

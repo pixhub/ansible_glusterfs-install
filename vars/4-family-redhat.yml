@@ -1,0 +1,6 @@
+glusterfs_daemon: glusterd
+post_install: centos-release-gluster
+packages_install:
+  - xfsprogs
+  - glusterfs-server
+  - glusterfs-client

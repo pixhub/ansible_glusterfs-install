@@ -1,0 +1,2 @@
+glusterfs_daemon: glusterfs-server
+post_install: apt-transport-https
